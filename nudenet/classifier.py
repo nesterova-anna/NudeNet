@@ -102,6 +102,7 @@ class Classifier:
     def classify(
         self,
         image_paths=[],
+        image_names=[],
         batch_size=4,
         image_size=(256, 256),
         categories=["unsafe", "safe"],
@@ -117,7 +118,7 @@ class Classifier:
             image_paths = [image_paths]
 
         loaded_images, loaded_image_paths = load_images(
-            image_paths, image_size, image_names=image_paths
+            image_paths, image_size, image_names
         )
 
         if not loaded_image_paths:
