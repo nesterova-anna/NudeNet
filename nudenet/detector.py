@@ -66,7 +66,8 @@ class Detector:
         # self.detection_model = tf.contrib.predictor.from_saved_model(
         #     checkpoint_path, signature_def_key="predict"
         # )
-        self.detection_model = tf.saved_model.load(checkpoint_path).signatures['predict']
+        self.detection_model = tf.saved_model.load(checkpoint_path)
+        print(list(self.detection_model.signatures.keys()))
         self.classes = [c.strip() for c in open(classes_path).readlines() if c.strip()]
 
     def detect_video(

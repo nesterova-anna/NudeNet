@@ -43,7 +43,8 @@ class Classifier:
         # self.nsfw_model = tf.contrib.predictor.from_saved_model(
         #     model_path, signature_def_key="predict"
         # )
-        self.nsfw_model = tf.saved_model.load(model_path).signatures['predict']
+        self.nsfw_model = tf.saved_model.load(model_path)
+        print(list(self.nsfw_model.signatures.keys()))
 
     def classify_video(
         self,
