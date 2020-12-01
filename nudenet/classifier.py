@@ -40,9 +40,10 @@ class Classifier:
                 f.extractall(path=os.path.dirname(model_tar_file_path))
             os.remove(model_tar_file_path)
 
-        self.nsfw_model = tf.contrib.predictor.from_saved_model(
-            model_path, signature_def_key="predict"
-        )
+        # self.nsfw_model = tf.contrib.predictor.from_saved_model(
+        #     model_path, signature_def_key="predict"
+        # )
+        self.nsfw_model = tf.saved_model.load(model_path).signatures['predict']
 
     def classify_video(
         self,
