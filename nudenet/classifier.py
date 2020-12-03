@@ -117,8 +117,8 @@ class Classifier:
                 categories: since the model predicts numbers, categories is the list of actual names of categories
         """
         array_with_image_paths = []
-        for img_as_arr in image_paths:
-            array_with_image_paths.append(img_as_arr)
+        if isinstance(image_paths, str) or type(image_paths).__module__ == np.__name__:
+            array_with_image_paths.append(image_paths)
 
         # if isinstance(image_paths, str):
         #     image_paths = [image_paths]
