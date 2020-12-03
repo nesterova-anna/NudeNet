@@ -55,9 +55,9 @@ def load_img(
         # img = pil_image.open(path)
         response = requests.get(path)
         img = pil_image.open(BytesIO(response.content))
-    # else:
-    #     path = cv2.cvtColor(path, cv2.COLOR_BGR2RGB)
-    #     img = pil_image.fromarray(path)
+    else:
+        path = cv2.cvtColor(path, cv2.COLOR_RGBA2RGB)
+        img = pil_image.fromarray(path)
 
     if color_mode == "grayscale":
         if img.mode != "L":
@@ -116,7 +116,7 @@ def img_to_array(img, data_format="channels_last", dtype="float32"):
     return x
 
 
-def load_images(images, image_size, image_names):
+def load_images(images, image_size, image_names=None):
     """
     Function for loading images into numpy arrays for passing to model.predict
     inputs:
@@ -128,8 +128,20 @@ def load_images(images, image_size, image_names):
         loaded_image_indexes: paths of images which the function is able to process
     
     """
+    print(type(images))
     loaded_images = []
     loaded_image_paths = []
+    correct_image_names = []
+
+    # if image from url don't use image_names, else - enter image names
+    for i, image in enumerate(images):
+
+        if isinstance(image, str) and image_names is None:
+            correct_image_names.append(image)
+        else:
+            correct_image_names.append(image_names[i])
+
+
 
     for i, img in enumerate(images):
         try:
@@ -137,7 +149,9 @@ def load_images(images, image_size, image_names):
             image = img_to_array(image)
             image /= 255
             loaded_images.append(image)
-            loaded_image_paths.append(image_names[i])
+
+            loaded_image_paths.append(correct_image_names[i])
+
         except Exception as ex:
             logging.exception(f"Error reading {image_names[i]} {ex}", exc_info=True)
 

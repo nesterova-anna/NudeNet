@@ -104,7 +104,7 @@ class Classifier:
     def classify(
         self,
         image_paths=[],
-        image_names=[],
+        image_names=None,
         batch_size=4,
         image_size=(256, 256),
         categories=["unsafe", "safe"],
@@ -123,8 +123,10 @@ class Classifier:
             image_paths, image_size, image_names
         )
 
-        if not loaded_image_paths:
-            return {}
+        # if not loaded_image_paths:
+        #     loaded_image_paths = 'image_1.jpg'
+        #     # return {}
+
 
         preds = []
         model_preds = []
