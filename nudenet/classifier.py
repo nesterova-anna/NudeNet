@@ -116,16 +116,19 @@ class Classifier:
                 image_size: size to which the image needs to be resized
                 categories: since the model predicts numbers, categories is the list of actual names of categories
         """
-        if isinstance(image_paths, str):
-            image_paths = [image_paths]
+        array_with_image_paths = []
+        for img_as_arr in image_paths:
+            array_with_image_paths.append(img_as_arr)
+
+        # if isinstance(image_paths, str):
+        #     image_paths = [image_paths]
 
         loaded_images, loaded_image_paths = load_images(
-            image_paths, image_size, image_names
+            array_with_image_paths, image_size, image_names
         )
 
         # if not loaded_image_paths:
-        #     loaded_image_paths = 'image_1.jpg'
-        #     # return {}
+        #    return {}
 
 
         preds = []

@@ -128,7 +128,6 @@ def load_images(images, image_size, image_names=None):
         loaded_image_indexes: paths of images which the function is able to process
     
     """
-    print(type(images))
     loaded_images = []
     loaded_image_paths = []
     correct_image_names = []
