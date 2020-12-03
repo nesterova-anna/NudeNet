@@ -63,11 +63,11 @@ class Detector:
             print("Downloading the classes list to", classes_path)
             pydload.dload(classes_url, save_to_path=classes_path, max_time=None)
 
-        # self.detection_model = tf.contrib.predictor.from_saved_model(
-        #     checkpoint_path, signature_def_key="predict"
-        # )
-        self.detection_model = tf.saved_model.load(checkpoint_path)
-        print(list(self.detection_model.signatures.keys()))
+        self.detection_model = tf.contrib.predictor.from_saved_model(
+            checkpoint_path, signature_def_key="predict"
+        )
+        # self.detection_model = tf.saved_model.load(checkpoint_path).signatures['predict']
+
         self.classes = [c.strip() for c in open(classes_path).readlines() if c.strip()]
 
     def detect_video(
@@ -108,6 +108,8 @@ class Detector:
             frames = frames[batch_size:]
             frame_indices = frame_indices[batch_size:]
             if batch_indices:
+
+
                 pred = self.detection_model({"images": np.asarray(batch)})
                 boxes, scores, labels = (
                     pred["output1"],
