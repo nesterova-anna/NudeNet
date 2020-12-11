@@ -25,7 +25,7 @@ if pil_image is not None:
 
 
 def load_img(
-    image, grayscale=False, color_mode="rgb", target_size=None, interpolation="nearest"
+    path, grayscale=False, color_mode="rgb", target_size=None, interpolation="nearest"
 ):
     """Loads an image into PIL format.
     
@@ -51,22 +51,35 @@ def load_img(
         raise ImportError(
             "Could not import PIL.Image. " "The use of `load_img` requires PIL."
         )
-
-    if isinstance(image, type("")):
+    if isinstance(path, type("")):
         # img = pil_image.open(path)
         # response = requests.get(path)
         # img = pil_image.open(BytesIO(response.content))
-        req = urllib.request.Request(image)
+        req = urllib.request.Request(path)
         with urllib.request.urlopen(req) as img:
-            img_as_arr = np.asarray(bytearray(img.read()), dtype=np.uint8)
+            img_as_arr = np.asarray(bytearray(path.read()), dtype=np.uint8)
             image = cv2.imdecode(img_as_arr, cv2.IMREAD_COLOR)
+            img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            img = pil_image.fromarray(img)
+    else:
+        path = cv2.cvtColor(path, cv2.COLOR_BGR2RGB)
+        img = pil_image.fromarray(path)
 
-    if image.shape[2] == 4:
-        image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
-    elif image.shape[2] == 3:
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-    img = pil_image.fromarray(image)
+    # if isinstance(image, type("")):
+    #     # img = pil_image.open(path)
+    #     # response = requests.get(path)
+    #     # img = pil_image.open(BytesIO(response.content))
+    #     req = urllib.request.Request(image)
+    #     with urllib.request.urlopen(req) as img:
+    #         img_as_arr = np.asarray(bytearray(img.read()), dtype=np.uint8)
+    #         image = cv2.imdecode(img_as_arr, cv2.IMREAD_COLOR)
+    #
+    # if image.shape[2] == 4:
+    #     image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
+    # elif image.shape[2] == 3:
+    #     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    #
+    # img = pil_image.fromarray(image)
 
     if color_mode == "grayscale":
         if img.mode != "L":
