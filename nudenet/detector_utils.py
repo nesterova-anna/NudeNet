@@ -2,6 +2,8 @@ import os
 import cv2
 import numpy as np
 from PIL import Image
+import requests
+from io import BytesIO
 
 
 def read_image_bgr(path):
@@ -10,7 +12,8 @@ def read_image_bgr(path):
         path: Path to the image.
     """
     if isinstance(path, str):
-        image = np.ascontiguousarray(Image.open(path).convert("RGB"))
+        response = requests.get(path)
+        image = np.ascontiguousarray(Image.open(BytesIO(response.content)).convert("RGB"))
     else:
         path = cv2.cvtColor(path, cv2.COLOR_BGR2RGB)
         image = np.ascontiguousarray(Image.fromarray(path))
