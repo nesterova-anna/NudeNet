@@ -161,5 +161,6 @@ def load_images(images, image_size, image_names=None):
 
         except Exception as ex:
             logging.exception(f"Error reading {image_names[i]} {ex}", exc_info=True)
+    print("Images loaded")
 
     return np.asarray(loaded_images), loaded_image_paths

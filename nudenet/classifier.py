@@ -44,6 +44,7 @@ class Classifier:
             model_path, signature_def_key="predict"
         )
         # self.nsfw_model = tf.saved_model.load(model_path).signatures['predict']
+        print("Init classifier")
 
 
     def classify_video(
@@ -116,6 +117,7 @@ class Classifier:
                 image_size: size to which the image needs to be resized
                 categories: since the model predicts numbers, categories is the list of actual names of categories
         """
+        print("Start classifing")
         array_with_image_paths = []
         if isinstance(image_paths, str) or type(image_paths).__module__ == np.__name__:
             array_with_image_paths.append(image_paths)
@@ -134,9 +136,11 @@ class Classifier:
         preds = []
         model_preds = []
         while len(loaded_images):
+            print('Start nsfw_model')
             _model_preds = self.nsfw_model({"images": loaded_images[:batch_size]})[
                 "output"
             ]
+            print('Finish nsfw_model')
             model_preds.append(_model_preds)
             preds += np.argsort(_model_preds, axis=1).tolist()
             loaded_images = loaded_images[batch_size:]
