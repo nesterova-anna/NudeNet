@@ -5,10 +5,7 @@ import tarfile
 import logging
 import numpy as np
 import tensorflow as tf
-from progressbar import progressbar
-
 from .detector_utils import preprocess_image
-from .video_utils import get_interest_frames_from_video
 
 
 def dummy(x):
@@ -46,12 +43,12 @@ class Detector:
         checkpoint_tar_file_name = os.path.basename(checkpoint_url)
         checkpoint_name = checkpoint_tar_file_name.replace(".tar", "")
 
-        checkpoint_path = os.path.join(model_folder, checkpoint_name)
+        self.checkpoint_path = os.path.join(model_folder, checkpoint_name)
         checkpoint_tar_file_path = os.path.join(model_folder, checkpoint_tar_file_name)
         classes_path = os.path.join(model_folder, "classes")
 
-        if not os.path.exists(checkpoint_path):
-            print("Downloading the checkpoint to", checkpoint_path)
+        if not os.path.exists(self.checkpoint_path):
+            print("Downloading the checkpoint to", self.checkpoint_path)
             pydload.dload(
                 checkpoint_url, save_to_path=checkpoint_tar_file_path, max_time=None
             )
@@ -63,85 +60,10 @@ class Detector:
             print("Downloading the classes list to", classes_path)
             pydload.dload(classes_url, save_to_path=classes_path, max_time=None)
 
-        self.detection_model = tf.contrib.predictor.from_saved_model(
-            checkpoint_path, signature_def_key="predict"
-        )
-        # self.detection_model = tf.saved_model.load(checkpoint_path).signatures['predict']
-
         self.classes = [c.strip() for c in open(classes_path).readlines() if c.strip()]
 
-    def detect_video(
-        self, video_path, mode="default", min_prob=0.6, batch_size=2, show_progress=True
-    ):
-        frame_indices, frames, fps, video_length = get_interest_frames_from_video(
-            video_path
-        )
-        logging.debug(
-            f"VIDEO_PATH: {video_path}, FPS: {fps}, Important frame indices: {frame_indices}, Video length: {video_length}"
-        )
-        if mode == "fast":
-            frames = [
-                preprocess_image(frame, min_side=480, max_side=800) for frame in frames
-            ]
-        else:
-            frames = [preprocess_image(frame) for frame in frames]
-
-        scale = frames[0][1]
-        frames = [frame[0] for frame in frames]
-        all_results = {
-            "metadata": {
-                "fps": fps,
-                "video_length": video_length,
-                "video_path": video_path,
-            },
-            "preds": {},
-        }
-
-        progress_func = progressbar
-
-        if not show_progress:
-            progress_func = dummy
-
-        for _ in progress_func(range(int(len(frames) / batch_size) + 1)):
-            batch = frames[:batch_size]
-            batch_indices = frame_indices[:batch_size]
-            frames = frames[batch_size:]
-            frame_indices = frame_indices[batch_size:]
-            if batch_indices:
-
-
-                pred = self.detection_model({"images": np.asarray(batch)})
-                boxes, scores, labels = (
-                    pred["output1"],
-                    pred["output2"],
-                    pred["output3"],
-                )
-                boxes /= scale
-                for frame_index, frame_boxes, frame_scores, frame_labels in zip(
-                    frame_indices, boxes, scores, labels
-                ):
-                    if frame_index not in all_results["preds"]:
-                        all_results["preds"][frame_index] = []
-
-                    for box, score, label in zip(
-                        frame_boxes, frame_scores, frame_labels
-                    ):
-                        if score < min_prob:
-                            continue
-                        box = box.astype(int).tolist()
-                        label = self.classes[label]
-
-                        all_results["preds"][frame_index].append(
-                            {
-                                "box": [int(c) for c in box],
-                                "score": float(score),
-                                "label": label,
-                            }
-                        )
-
-        return all_results
-
     def detect(self, img_path, mode="default", min_prob=None):
+        print("Start detecting...")
         if mode == "fast":
             image, scale = preprocess_image(img_path, min_side=480, max_side=800)
             if not min_prob:
@@ -151,8 +73,22 @@ class Detector:
             if not min_prob:
                 min_prob = 0.6
 
-        pred = self.detection_model({"images": np.expand_dims(image, axis=0)})
-        boxes, scores, labels = pred["output1"], pred["output2"], pred["output3"]
+        print("Detecting has finished...")
+        sample = np.expand_dims(image, axis=0)
+
+        with tf.compat.v1.Session() as sess:
+            model = tf.compat.v1.saved_model.load(sess, ['serve'], self.checkpoint_path)
+            x_name = model.signature_def['predict'].inputs['images'].name
+            x = sess.graph.get_tensor_by_name(x_name)
+            y1_name = model.signature_def['predict'].outputs['output1'].name
+            y1 = sess.graph.get_tensor_by_name(y1_name)
+            y2_name = model.signature_def['predict'].outputs['output2'].name
+            y2 = sess.graph.get_tensor_by_name(y2_name)
+            y3_name = model.signature_def['predict'].outputs['output3'].name
+            y3 = sess.graph.get_tensor_by_name(y3_name)
+            pred = sess.run([y1, y2, y3], feed_dict={x: sample})
+
+        boxes, scores, labels = pred[0], pred[1], pred[2]
         boxes /= scale
         processed_boxes = []
         for box, score, label in zip(boxes[0], scores[0], labels[0]):

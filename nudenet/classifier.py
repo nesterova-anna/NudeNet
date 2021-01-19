@@ -35,6 +35,7 @@ class Classifier:
     def classify(
             self,
             image_paths=[],
+            image_names=None,
             batch_size=4,
             image_size=(256, 256),
             categories=["unsafe", "safe"],
@@ -46,25 +47,20 @@ class Classifier:
                 image_size: size to which the image needs to be resized
                 categories: since the model predicts numbers, categories is the list of actual names of categories
         """
-        print("Start classifing")
         array_with_image_paths = []
         if isinstance(image_paths, str) or type(image_paths).__module__ == np.__name__:
             array_with_image_paths.append(image_paths)
 
-        # if isinstance(image_paths, str):
-        #     image_paths = [image_paths]
-
+        print('Get loaded image...')
         loaded_images, loaded_image_paths = load_images(
-            array_with_image_paths, image_size, image_names= image_paths
+            array_with_image_paths, image_size, image_names
         )
 
-        if not loaded_image_paths:
-            return {}
-
+        print("Start classifying...")
         model_preds = self.nsfw_model.predict(
             loaded_images, batch_size=batch_size
         )
-
+        print("Classifying has finished...")
         preds = np.argsort(model_preds, axis=1).tolist()
 
         probs = []
